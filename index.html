@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Braunwald's Heart Disease · 한국어 웹 리더</title>
+</head>
+<body class="book-home">
+<header class="book-top">
+  <div class="book-top-inner">
+    <div class="book-brand">
+      <div class="kicker">Web Book</div>
+      <h1>Braunwald's Heart Disease</h1>
+      <div class="subtitle">장을 고르면 바로 읽을 수 있고, 각 장 안에서는 왼쪽 위 책 아이콘으로 다른 장으로 건너뛸 수 있습니다.</div>
+    </div>
+    <button class="bk-btn bk-iconbtn" id="homeThemeBtn" type="button" aria-label="테마 전환" title="테마 전환">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    </button>
+  </div>
+</header>
+<main>
+  <div class="home-intro">
+    소절 목차는 기본적으로 접혀 있습니다. 각 장 카드 아래의 <strong>소절 목차 펼치기</strong>를 누르면 그 장의 소절로 바로 이동할 수 있습니다.
+  </div>
+  <div class="home-toolbar">
+    <button class="bk-btn" id="homeExpandAll" type="button" aria-pressed="false">
+      <span class="lbl">소절 모두 펼치기</span>
+    </button>
+  </div>
+  <div id="tocHome"></div>
+</main>
+<footer class="book-foot">
+  목차는 <code>scripts/build_book.py</code>가 각 장 HTML의 제목과 소제목을 읽어 자동 생성합니다.
+</footer>
+
+
+<!--BOOK-NAV-START-->
+<style>
+/* ============================================================
+   Braunwald Web Book — shared navigation layer
+   Loaded by index.html and by every chapter page.
+
+   Chapter pages define their own palette (--paper, --ink, --accent …)
+   in an inline <style> block, so every rule here uses those variables
+   and inherits each chapter's colours and light/dark state for free.
+   The book-level palette below is scoped to .book-home so it can never
+   clobber a chapter's own palette.
+   ============================================================ */
+
+/* ---------- book-level palette (home page only) ---------- */
+:root{
+  --bk-paper:#F6F4F1;
+  --bk-paper-raised:#FFFDFB;
+  --bk-paper-sunken:#EBE7E1;
+  --bk-ink:#1D2126;
+  --bk-ink-soft:#525B65;
+  --bk-ink-faint:#8A929B;
+  --bk-accent:#2C3440;
+  --bk-accent-soft:#5A6675;
+  --bk-accent2:#7A6652;
+  --bk-line:#DDD8D1;
+  --bk-line-soft:#EBE7E1;
+  --bk-shadow:0 1px 2px rgba(28,30,36,.05), 0 8px 24px -12px rgba(28,30,36,.16);
+  --bk-font-ui:-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;
+  --bk-font-mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bk-paper:#14161A;
+    --bk-paper-raised:#1C1F25;
+    --bk-paper-sunken:#0E1013;
+    --bk-ink:#E8EAED;
+    --bk-ink-soft:#AEB6C0;
+    --bk-ink-faint:#727C87;
+    --bk-accent:#C3CEDC;
+    --bk-accent-soft:#8E9CAD;
+    --bk-accent2:#C4A882;
+    --bk-line:#2A2E35;
+    --bk-line-soft:#1F2228;
+    --bk-shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px -12px rgba(0,0,0,.55);
+  }
+}
+:root[data-theme="dark"]{
+  --bk-paper:#14161A;
+  --bk-paper-raised:#1C1F25;
+  --bk-paper-sunken:#0E1013;
+  --bk-ink:#E8EAED;
+  --bk-ink-soft:#AEB6C0;
+  --bk-ink-faint:#727C87;
+  --bk-accent:#C3CEDC;
+  --bk-accent-soft:#8E9CAD;
+  --bk-accent2:#C4A882;
+  --bk-line:#2A2E35;
+  --bk-line-soft:#1F2228;
+  --bk-shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px -12px rgba(0,0,0,.55);
+}
+
+/* The home page maps the book palette onto the same variable names the
+   navigation components use, so one set of rules serves both contexts. */
+body.book-home{
+  --paper:var(--bk-paper); --paper_raised:var(--bk-paper-raised); --paper_sunken:var(--bk-paper-sunken);
+  --ink:var(--bk-ink); --ink_soft:var(--bk-ink-soft); --ink_faint:var(--bk-ink-faint);
+  --accent:var(--bk-accent); --accent_soft:var(--bk-accent-soft); --accent2:var(--bk-accent2);
+  --line:var(--bk-line); --line_soft:var(--bk-line-soft);
+  --shadow:var(--bk-shadow); --font-ui:var(--bk-font-ui); --font-mono:var(--bk-font-mono);
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:var(--font-ui); -webkit-font-smoothing:antialiased;
+}
+
+/* ---------- home page ---------- */
+.book-home header.book-top{
+  position:sticky; top:0; z-index:40;
+  background:color-mix(in srgb,var(--paper) 88%,transparent);
+  backdrop-filter:blur(10px) saturate(1.1);
+  -webkit-backdrop-filter:blur(10px) saturate(1.1);
+  border-bottom:1px solid var(--line);
+}
+.book-home .book-top-inner{
+  max-width:960px; margin:0 auto; padding:14px 20px;
+  display:flex; align-items:flex-start; gap:12px;
+}
+.book-home .book-brand{flex:1; min-width:0}
+.book-home .kicker{
+  font:600 10.5px/1.3 var(--font-mono); letter-spacing:.09em;
+  text-transform:uppercase; color:var(--accent2);
+}
+.book-home h1{margin:3px 0 0; font-size:22px; line-height:1.25; letter-spacing:-.01em; font-weight:800}
+.book-home .subtitle{margin:5px 0 0; color:var(--ink_soft); font-size:12.5px; line-height:1.55}
+.book-home main{max-width:960px; margin:0 auto; padding:24px 20px 80px}
+.home-intro{
+  margin:0 0 22px; padding:13px 15px; border:1px solid var(--line);
+  border-radius:10px; background:var(--paper_raised);
+  color:var(--ink_soft); font-size:12.5px; line-height:1.65;
+}
+.home-toolbar{display:flex; gap:8px; flex-wrap:wrap; margin:0 0 18px}
+.home-section{margin:0 0 30px}
+.home-section-title{
+  font:700 10px/1.3 var(--font-mono); letter-spacing:.09em; text-transform:uppercase;
+  color:var(--ink_faint); padding:6px 2px 10px;
+}
+.home-chapter-card{
+  border:1px solid var(--line); border-radius:13px; background:var(--paper_raised);
+  box-shadow:var(--shadow); margin-bottom:12px; overflow:hidden;
+}
+.home-chapter{
+  display:block; padding:16px 18px 14px; color:inherit; text-decoration:none;
+}
+.home-chapter:hover{background:var(--paper_sunken)}
+.home-num{
+  display:block; font:700 10px/1.3 var(--font-mono);
+  letter-spacing:.09em; text-transform:uppercase; color:var(--accent2);
+}
+.home-title{
+  display:block; font-size:18px; line-height:1.35; font-weight:800;
+  color:var(--accent); margin-top:4px;
+}
+.home-meta{
+  display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+  padding:0 18px 14px; margin-top:-4px;
+}
+.home-exlink{
+  display:inline-block; padding:5px 11px; border-radius:999px;
+  border:1px solid color-mix(in srgb,var(--accent2) 45%,var(--line));
+  background:color-mix(in srgb,var(--accent2) 10%,transparent);
+  color:var(--accent2); text-decoration:none;
+  font-size:11.5px; font-weight:700; line-height:1.4;
+}
+.home-exlink:hover{background:color-mix(in srgb,var(--accent2) 20%,transparent)}
+.home-count{color:var(--ink_faint); font:600 11px/1.4 var(--font-mono)}
+
+/* collapsible subsection list — closed by default */
+.home-details{border-top:1px dashed var(--line)}
+.home-details>summary{
+  list-style:none; cursor:pointer; padding:10px 18px;
+  color:var(--ink_soft); font-size:12px; font-weight:700;
+  display:flex; align-items:center; gap:7px; user-select:none;
+}
+.home-details>summary::-webkit-details-marker{display:none}
+.home-details>summary:hover{background:var(--paper_sunken); color:var(--accent)}
+.home-details>summary .chev{
+  width:14px; height:14px; flex:none; transition:transform .18s ease;
+  color:var(--ink_faint);
+}
+.home-details[open]>summary .chev{transform:rotate(90deg)}
+.home-details[open]>summary{color:var(--accent)}
+.home-subsections{
+  margin:0 18px 14px 26px; border-left:2px solid var(--line);
+  padding:6px 0 6px 10px;
+}
+.home-subsection{
+  display:block; color:var(--ink_soft); text-decoration:none;
+  font-size:12.5px; line-height:1.45; padding:5px 9px; border-radius:7px;
+}
+.home-subsection:hover{background:var(--paper_sunken); color:var(--accent)}
+.home-subsection.level-3{padding-left:18px; font-size:12px}
+.home-subsection.level-4{padding-left:27px; font-size:11.5px; color:var(--ink_faint)}
+.book-home footer.book-foot{
+  max-width:960px; margin:0 auto; padding:0 20px 60px;
+  color:var(--ink_faint); font-size:11.5px; line-height:1.7; text-align:center;
+}
+
+/* ---------- shared button ---------- */
+.bk-btn{
+  appearance:none; border:1px solid var(--line); background:var(--paper_raised);
+  color:var(--ink); height:36px; padding:0 12px; border-radius:9px;
+  font-family:var(--font-ui); font-size:12.5px; font-weight:600;
+  cursor:pointer; white-space:nowrap; flex:none;
+  display:inline-flex; align-items:center; gap:6px;
+}
+.bk-btn:hover{background:var(--paper_sunken)}
+.bk-btn:active{transform:scale(.97)}
+.bk-btn svg{width:16px; height:16px}
+.bk-iconbtn{width:36px; padding:0; justify-content:center}
+
+/* ---------- chapter sidebar ---------- */
+#bookScrim{
+  position:fixed; inset:0; background:rgba(10,10,14,.45);
+  backdrop-filter:blur(2px); z-index:100;
+  opacity:0; pointer-events:none; transition:opacity .2s ease;
+}
+#bookScrim.show{opacity:1; pointer-events:auto}
+#bookPanel{
+  position:fixed; left:0; top:0; height:100%; width:min(360px,90vw);
+  background:var(--paper_raised); border-right:1px solid var(--line);
+  z-index:105; transform:translateX(-100%);
+  transition:transform .24s cubic-bezier(.2,.8,.2,1);
+  display:flex; flex-direction:column;
+  box-shadow:12px 0 34px -22px rgba(0,0,0,.4);
+}
+#bookPanel.show{transform:translateX(0)}
+.book-head{
+  padding:16px 18px; border-bottom:1px solid var(--line);
+  display:flex; justify-content:space-between; align-items:flex-start; gap:12px;
+}
+.book-head h2{margin:0; font-size:15px; line-height:1.3; font-weight:800}
+.book-head p{margin:4px 0 0; color:var(--ink_faint); font:600 10.5px/1.3 var(--font-mono); letter-spacing:.06em}
+.book-close{
+  appearance:none; border:1px solid var(--line); background:transparent;
+  color:var(--ink); width:32px; height:32px; border-radius:8px;
+  cursor:pointer; font-size:17px; line-height:1; flex:none;
+}
+.book-close:hover{background:var(--paper_sunken)}
+.book-list{overflow:auto; overscroll-behavior:contain; padding:10px 10px 28px; flex:1}
+.book-part{
+  margin:10px 2px 6px; padding:7px 10px 4px; color:var(--ink_faint);
+  font:700 9.5px/1.3 var(--font-mono); letter-spacing:.09em; text-transform:uppercase;
+}
+.book-chapter{margin-bottom:2px}
+.book-row{display:flex; align-items:stretch; gap:2px}
+.book-link{
+  flex:1; min-width:0; display:block; padding:9px 11px; border-radius:9px;
+  color:var(--ink); text-decoration:none; line-height:1.35;
+}
+.book-link:hover{background:var(--paper_sunken)}
+.book-link.current{
+  background:color-mix(in srgb,var(--accent) 12%,transparent);
+  color:var(--accent);
+}
+.chapter-num{
+  display:block; font:700 9.5px/1.2 var(--font-mono);
+  color:var(--accent2); letter-spacing:.08em; text-transform:uppercase;
+}
+.book-link.current .chapter-num{color:var(--accent)}
+.chapter-title{display:block; font-size:13.5px; margin-top:2px}
+.book-link.current .chapter-title{font-weight:800}
+.book-subtoggle{
+  appearance:none; border:none; background:transparent; color:var(--ink_faint);
+  width:30px; border-radius:8px; cursor:pointer; flex:none;
+  display:flex; align-items:center; justify-content:center;
+}
+.book-subtoggle:hover{background:var(--paper_sunken); color:var(--accent)}
+.book-subtoggle svg{width:13px; height:13px; transition:transform .18s ease}
+.book-subtoggle[aria-expanded="true"] svg{transform:rotate(90deg)}
+.book-subtoggle[aria-expanded="true"]{color:var(--accent)}
+.book-sublist{display:none; padding:2px 0 8px 16px}
+.book-sublist.expanded{display:block}
+.book-sublink{
+  display:block; padding:5px 9px; border-left:2px solid var(--line);
+  color:var(--ink_soft); text-decoration:none; font-size:11.5px; line-height:1.45;
+}
+.book-sublink:hover{background:var(--paper_sunken); color:var(--accent)}
+.book-sublink.level-3{padding-left:20px; font-size:11px}
+.book-sublink.level-4{padding-left:31px; font-size:10.5px; color:var(--ink_faint)}
+.book-sublink.active-section{
+  border-left-color:var(--accent2); color:var(--accent2); font-weight:700;
+  background:color-mix(in srgb,var(--accent2) 9%,transparent);
+}
+.book-exlink{
+  display:block; margin:1px 0 0 11px; padding:5px 10px; border-radius:7px;
+  color:var(--ink_faint); text-decoration:none; font-size:11px; font-weight:600;
+}
+.book-exlink:hover{background:var(--paper_sunken); color:var(--accent2)}
+.book-exlink.current{color:var(--accent2); font-weight:800}
+
+/* ---------- previous / next pager ---------- */
+#bookPager{
+  max-width:720px; margin:8px auto 0; padding:0 18px 44px;
+  display:grid; grid-template-columns:1fr 1fr; gap:12px;
+}
+.book-page-link{
+  display:flex; flex-direction:column; gap:4px; min-width:0;
+  padding:13px 15px; border:1px solid var(--line); border-radius:11px;
+  background:var(--paper_raised); text-decoration:none; color:var(--ink);
+  box-shadow:var(--shadow);
+}
+.book-page-link:hover{background:var(--paper_sunken); border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}
+.book-page-link.next{text-align:right; align-items:flex-end}
+.book-page-link .label{
+  font:700 9.5px/1.3 var(--font-mono); letter-spacing:.09em;
+  color:var(--accent2); text-transform:uppercase;
+}
+.book-page-link .title{
+  font-size:12.5px; font-weight:700; line-height:1.4;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+  overflow:hidden; max-width:100%;
+}
+.book-page-link.disabled{opacity:.4; pointer-events:none}
+
+/* ---------- chapter header: keep every control reachable on phones ---------- */
+@media (max-width:560px){
+  header.top .top-inner{flex-wrap:wrap; gap:8px}
+  header.top .top-inner .brand{flex:1 1 120px; order:1}
+  header.top .top-inner #bookNavBtn{order:2}
+  header.top .top-inner #themeBtn{order:3}
+  header.top .top-inner::after{content:""; order:4; flex-basis:100%; height:0}
+  header.top .top-inner #markFilterBtn{order:5}
+  header.top .top-inner #expandAll{order:6}
+  header.top .top-inner .fontctl{order:7}
+  header.top .top-inner #tocBtn{order:8}
+  #bookPager{grid-template-columns:1fr; padding-left:14px; padding-right:14px}
+  .book-page-link{padding:11px 13px}
+  .book-page-link.next{text-align:left; align-items:flex-start}
+  .book-home .book-top-inner{padding:12px 14px}
+  .book-home main{padding:18px 14px 60px}
+  .book-home h1{font-size:19px}
+  .home-title{font-size:16px}
+  .home-subsections{margin-left:16px}
+}
+@media (prefers-reduced-motion:reduce){
+  #bookPanel,#bookScrim,.book-subtoggle svg,.home-details>summary .chev{transition:none}
+}
+
+</style>
+<script>
+// AUTO-GENERATED by scripts/build_book.py. Do not edit manually.
+// Behaviour lives in book-nav.js, which is NOT generated.
+window.BOOK_PAGES = [{"id":"ch01","section":"PART I · CARDIOVASCULAR MEDICINE의 기초","title":"1 · Cardiovascular Disease","sub":"Cardiovascular Disease","file":"ch01.html","sections":[{"level":2,"title":"이 장의 구성","id":"이-장의-구성"},{"level":2,"title":"태동","id":"태동"},{"level":2,"title":"초기의 움직임","id":"초기의-움직임"},{"level":2,"title":"전문 분야의 출현","id":"전문-분야의-출현"},{"level":2,"title":"과거","id":"과거"},{"level":2,"title":"현재","id":"현재"},{"level":2,"title":"Cardiac Catheterization","id":"cardiac-catheterization"},{"level":2,"title":"Percutaneous Coronary Intervention","id":"percutaneous-coronary-intervention"},{"level":2,"title":"Cardiovascular Surgery","id":"cardiovascular-surgery"},{"level":2,"title":"고찰","id":"고찰"},{"level":2,"title":"과거","id":"과거-2"},{"level":2,"title":"현재","id":"현재-2"},{"level":2,"title":"미래","id":"미래"},{"level":2,"title":"과거","id":"과거-3"},{"level":2,"title":"현재","id":"현재-3"},{"level":4,"title":"Mitral Stenosis","id":"mitral-stenosis"},{"level":4,"title":"Mitral Regurgitation (MR)","id":"mitral-regurgitation-mr"},{"level":4,"title":"Transcatheter Aortic Valve Replacement","id":"transcatheter-aortic-valve-replacement"},{"level":2,"title":"과거","id":"과거-4"},{"level":2,"title":"현재","id":"현재-4"},{"level":2,"title":"과거","id":"과거-5"},{"level":2,"title":"현재","id":"현재-5"},{"level":4,"title":"siRNA-inclisiran","id":"sirna-inclisiran"},{"level":2,"title":"미래","id":"미래-2"},{"level":4,"title":"Triglycerides","id":"triglycerides"},{"level":4,"title":"Lipoprotein (a)","id":"lipoprotein-a"},{"level":2,"title":"ACUTE MYOCARDIAL INFARCTION (CHAPTER 37~39 참조)","id":"acute-myocardial-infarction-chapter-37-39-참조"},{"level":2,"title":"Coronary Risk Factors","id":"coronary-risk-factors"},{"level":2,"title":"과거","id":"과거-6"},{"level":2,"title":"현재","id":"현재-6"},{"level":2,"title":"과거","id":"과거-7"},{"level":2,"title":"현재","id":"현재-7"},{"level":2,"title":"미래","id":"미래-3"},{"level":2,"title":"현재","id":"현재-8"},{"level":2,"title":"미래","id":"미래-4"},{"level":2,"title":"Precision Medicine","id":"precision-medicine"},{"level":2,"title":"현재","id":"현재-9"},{"level":2,"title":"미래","id":"미래-5"},{"level":2,"title":"과거","id":"과거-8"},{"level":2,"title":"현재","id":"현재-10"},{"level":4,"title":"Canakinumab","id":"canakinumab"},{"level":4,"title":"Colchicine","id":"colchicine"},{"level":2,"title":"미래","id":"미래-6"},{"level":2,"title":"CLONAL HEMATOPOIESIS (CHAPTER 24 참조)","id":"clonal-hematopoiesis-chapter-24-참조"},{"level":2,"title":"현재","id":"현재-11"},{"level":2,"title":"미래","id":"미래-7"},{"level":2,"title":"결론","id":"결론"},{"level":2,"title":"REFERENCES","id":"references"}]},{"id":"ch02","section":"PART I · CARDIOVASCULAR MEDICINE의 기초","title":"2 · Global Burden","sub":"Global Burden","file":"ch02.html","sections":[{"level":2,"title":"이 장의 구성","id":"이-장의-구성"},{"level":2,"title":"변화하는 질병 부담","id":"변화하는-질병-부담"},{"level":2,"title":"EPIDEMIOLOGIC TRANSITION","id":"epidemiologic-transition"},{"level":2,"title":"Stage of Inactivity and Obesity: 다섯 번째 국면인가?","id":"stage-of-inactivity-and-obesity-다섯-번째-국면인가"},{"level":2,"title":"Epidemiologic Transition의 서로 다른 양상","id":"epidemiologic-transition의-서로-다른-양상"},{"level":2,"title":"전 세계 질병 부담의 현재 양상","id":"전-세계-질병-부담의-현재-양상"},{"level":2,"title":"High-Income Countries","id":"high-income-countries"},{"level":2,"title":"East Asia and Pacific","id":"east-asia-and-pacific"},{"level":4,"title":"인구·사회 지표","id":"인구-사회-지표"},{"level":4,"title":"질병 부담","id":"질병-부담"},{"level":2,"title":"Central and Eastern Europe and Central Asia","id":"central-and-eastern-europe-and-central-asia"},{"level":4,"title":"인구·사회 지표","id":"인구-사회-지표-2"},{"level":4,"title":"질병 부담","id":"질병-부담-2"},{"level":2,"title":"Latin America and the Caribbean","id":"latin-america-and-the-caribbean"},{"level":4,"title":"인구·사회 지표","id":"인구-사회-지표-3"},{"level":4,"title":"질병 부담","id":"질병-부담-3"},{"level":2,"title":"North Africa and Middle East","id":"north-africa-and-middle-east"},{"level":4,"title":"인구·사회 지표","id":"인구-사회-지표-4"},{"level":4,"title":"질병 부담","id":"질병-부담-4"},{"level":2,"title":"South Asia","id":"south-asia"},{"level":4,"title":"인구·사회 지표","id":"인구-사회-지표-5"},{"level":4,"title":"질병 부담","id":"질병-부담-5"},{"level":2,"title":"Sub-Saharan Africa","id":"sub-saharan-africa"},{"level":4,"title":"인구·사회 지표","id":"인구-사회-지표-6"},{"level":4,"title":"질병 부담","id":"질병-부담-6"},{"level":2,"title":"위험인자","id":"위험인자"},{"level":2,"title":"Tobacco","id":"tobacco"},{"level":2,"title":"Hypertension","id":"hypertension"},{"level":2,"title":"Lipids (Chapter 27 참조)","id":"lipids-chapter-27-참조"},{"level":2,"title":"Diabetes (Chapter 31 참조)","id":"diabetes-chapter-31-참조"},{"level":2,"title":"Obesity (Chapter 30 참조)","id":"obesity-chapter-30-참조"},{"level":2,"title":"Diet (Chapter 29 참조)","id":"diet-chapter-29-참조"},{"level":2,"title":"Physical Inactivity (Chapter 30, 32 참조)","id":"physical-inactivity-chapter-30-32-참조"},{"level":2,"title":"인구 고령화 (Chapter 90 참조)","id":"인구-고령화-chapter-90-참조"},{"level":4,"title":"Genetic","id":"genetic"},{"level":2,"title":"Fetal Influences","id":"fetal-influences"},{"level":2,"title":"Environmental Exposures (Chapter 3 참조)","id":"environmental-exposures-chapter-3-참조"},{"level":2,"title":"경제적 부담","id":"경제적-부담"},{"level":2,"title":"비용 효과적 해결책","id":"비용-효과적-해결책"},{"level":2,"title":"확립된 Cardiovascular Disease의 관리","id":"확립된-cardiovascular-disease의-관리"},{"level":2,"title":"위험도 평가","id":"위험도-평가"},{"level":2,"title":"정책 및 지역사회 중재","id":"정책-및-지역사회-중재"},{"level":4,"title":"Tobacco Use","id":"tobacco-use"},{"level":4,"title":"염분, 식이, 지질 감소","id":"염분-식이-지질-감소"},{"level":2,"title":"요약 및 결론","id":"요약-및-결론"},{"level":2,"title":"REFERENCES","id":"references"}]},{"id":"ch03","section":"PART I · CARDIOVASCULAR MEDICINE의 기초","title":"3 · Environment","sub":"Environment","file":"ch03.html","sections":[{"level":2,"title":"이 장의 구성","id":"이-장의-구성"},{"level":2,"title":"오염물질의 전 세계적 범위와 인체 건강에 대한 영향","id":"오염물질의-전-세계적-범위와-인체-건강에-대한-영향"},{"level":2,"title":"AIR POLLUTION","id":"air-pollution"},{"level":2,"title":"Air Pollution의 조성과 발생원","id":"air-pollution의-조성과-발생원"},{"level":4,"title":"Particulate Air Pollutant","id":"particulate-air-pollutant"},{"level":4,"title":"Gaseous Pollutant","id":"gaseous-pollutant"},{"level":4,"title":"Particulate Matter의 발생원, 조성, 심혈관 위험","id":"particulate-matter의-발생원-조성-심혈관-위험"},{"level":4,"title":"Household Air Pollution 대 Ambient Air Pollution","id":"household-air-pollution-대-ambient-air-pollution"},{"level":2,"title":"노출 평가","id":"노출-평가"},{"level":2,"title":"Air Pollution·사망·심혈관 사건의 노출-반응 함수","id":"air-pollution-사망-심혈관-사건의-노출-반응-함수"},{"level":2,"title":"Air Pollution의 심혈관·대사 영향","id":"air-pollution의-심혈관-대사-영향"},{"level":4,"title":"Ischemic Heart Disease와 Cerebrovascular Event","id":"ischemic-heart-disease와-cerebrovascular-event"},{"level":4,"title":"Blood Pressure와 Hypertension","id":"blood-pressure와-hypertension"},{"level":4,"title":"Insulin Resistance와 Diabetes","id":"insulin-resistance와-diabetes"},{"level":4,"title":"Heart Failure","id":"heart-failure"},{"level":4,"title":"Arrhythmia","id":"arrhythmia"},{"level":4,"title":"Venous Thromboembolism","id":"venous-thromboembolism"},{"level":4,"title":"Chronic Kidney Disease","id":"chronic-kidney-disease"},{"level":2,"title":"Air Pollution과 심혈관 위험에 대한 기전적 통찰","id":"air-pollution과-심혈관-위험에-대한-기전적-통찰"},{"level":2,"title":"노출 시기, 감수성, 취약성","id":"노출-시기-감수성-취약성"},{"level":2,"title":"Air Pollution 경보와 위험 전달 방식","id":"air-pollution-경보와-위험-전달-방식"},{"level":2,"title":"Air Pollution의 심혈관 영향을 완화하기 위한 사회적·개인적 전략","id":"air-pollution의-심혈관-영향을-완화하기-위한-사회적-개인적-전략"},{"level":2,"title":"CLIMATE CHANGE","id":"climate-change"},{"level":2,"title":"소음 공해와 CARDIOVASCULAR DISEASE","id":"소음-공해와-cardiovascular-disease"},{"level":2,"title":"합성 화학물질과 CARDIOVASCULAR DISEASE","id":"합성-화학물질과-cardiovascular-disease"},{"level":2,"title":"금속성 오염물질과 CARDIOVASCULAR DISEASE","id":"금속성-오염물질과-cardiovascular-disease"},{"level":2,"title":"향후 과제와 전망","id":"향후-과제와-전망"},{"level":2,"title":"REFERENCES","id":"references"}]},{"id":"ch04","section":"PART I · CARDIOVASCULAR MEDICINE의 기초","title":"4 · Clinical Trials","sub":"Clinical Trials","file":"ch04.html","sections":[{"level":2,"title":"이 장의 구성","id":"이-장의-구성"},{"level":2,"title":"CLINICAL TRIAL과 다른 유형의 연구","id":"clinical-trial과-다른-유형의-연구"},{"level":2,"title":"CLINICAL TRIAL의 구성 요소","id":"clinical-trial의-구성-요소"},{"level":2,"title":"근거와 연구 배경","id":"근거와-연구-배경"},{"level":2,"title":"연구 설계","id":"연구-설계"},{"level":2,"title":"연구 수행","id":"연구-수행"},{"level":4,"title":"Randomization","id":"randomization"},{"level":4,"title":"Blinding (Masking)","id":"blinding-masking"},{"level":2,"title":"선정 및 제외 기준","id":"선정-및-제외-기준"},{"level":2,"title":"종말점 또는 “반응 변수”","id":"종말점-또는-반응-변수"},{"level":2,"title":"일차 및 이차 종말점의 분석","id":"일차-및-이차-종말점의-분석"},{"level":2,"title":"검정력과 표본 크기","id":"검정력과-표본-크기"},{"level":2,"title":"Clinical Trial에서의 Equipoise","id":"clinical-trial에서의-equipoise"},{"level":2,"title":"Placebo와 표준 치료로의 무작위 배정","id":"placebo와-표준-치료로의-무작위-배정"},{"level":2,"title":"Clinical Trial에서의 위해 가능성","id":"clinical-trial에서의-위해-가능성"},{"level":2,"title":"자료 및 안전성 모니터링","id":"자료-및-안전성-모니터링"},{"level":2,"title":"CLINICAL TRIAL 설계와 수행의 새로운 접근","id":"clinical-trial-설계와-수행의-새로운-접근"},{"level":2,"title":"Pragmatic (Large Simple) Trial","id":"pragmatic-large-simple-trial"},{"level":2,"title":"Clinical Trial에서 전자의무기록의 활용","id":"clinical-trial에서-전자의무기록의-활용"},{"level":2,"title":"Adaptive Design","id":"adaptive-design"},{"level":2,"title":"CLINICAL TRIAL의 해석","id":"clinical-trial의-해석"},{"level":2,"title":"Clinical Trial의 등록과 보고","id":"clinical-trial의-등록과-보고"},{"level":2,"title":"일차 결과의 이해","id":"일차-결과의-이해"},{"level":2,"title":"이차 종말점","id":"이차-종말점"},{"level":2,"title":"하위군의 해석","id":"하위군의-해석"},{"level":2,"title":"Post-hoc 분석","id":"post-hoc-분석"},{"level":2,"title":"결론","id":"결론"},{"level":2,"title":"REFERENCES","id":"references"}]},{"id":"ch05","section":"PART I · CARDIOVASCULAR MEDICINE의 기초","title":"5 · Clinical Decision-Making","sub":"Clinical Decision-Making","file":"ch05.html","sections":[{"level":2,"title":"이 장의 구성","id":"이-장의-구성"},{"level":2,"title":"진단적 결정","id":"진단적-결정"},{"level":2,"title":"치료적 결정","id":"치료적-결정"},{"level":2,"title":"새로운 임상 연구 결과에 근거해 임상 진료를 바꿀 시점의 판단","id":"새로운-임상-연구-결과에-근거해-임상-진료를-바꿀-시점의-판단"},{"level":2,"title":"공유 의사결정","id":"공유-의사결정"},{"level":2,"title":"임상적 결정의 질 모니터링","id":"임상적-결정의-질-모니터링"},{"level":2,"title":"System 1과 System 2 사고","id":"system-1과-system-2-사고"},{"level":2,"title":"임상적 추론의 교육","id":"임상적-추론의-교육"},{"level":2,"title":"결론","id":"결론"},{"level":4,"title":"CLASSIC REFERENCES","id":"classic-references"},{"level":2,"title":"REFERENCES","id":"references"}]},{"id":"ch06","section":"PART I · CARDIOVASCULAR MEDICINE의 기초","title":"6 · Health Care Policy","sub":"Health Care Policy","file":"ch06.html","sections":[{"level":2,"title":"이 장의 구성","id":"이-장의-구성"},{"level":2,"title":"HEALTH POLICY란 무엇인가","id":"health-policy란-무엇인가"},{"level":2,"title":"보험 보장과 접근 정책","id":"보험-보장과-접근-정책"},{"level":2,"title":"질을 높이고 비용을 줄이기 위한 지불·전달 체계 정책","id":"질을-높이고-비용을-줄이기-위한-지불-전달-체계-정책"},{"level":2,"title":"공개 보고","id":"공개-보고"},{"level":2,"title":"Value-Based Payment 프로그램: 병원","id":"value-based-payment-프로그램-병원"},{"level":2,"title":"Value-Based Purchasing: 외래","id":"value-based-purchasing-외래"},{"level":2,"title":"Alternative Payment Model","id":"alternative-payment-model"},{"level":2,"title":"CARDIOVASCULAR DISEASE의 위험·진료·결과에서의 불평등","id":"cardiovascular-disease의-위험-진료-결과에서의-불평등"},{"level":2,"title":"인종·민족적 소수집단 (Chapter 93 참조)","id":"인종-민족적-소수집단-chapter-93-참조"},{"level":2,"title":"도시-농촌 지리","id":"도시-농촌-지리"},{"level":2,"title":"소득","id":"소득"},{"level":2,"title":"결론","id":"결론"},{"level":2,"title":"REFERENCES","id":"references"}]},{"id":"ch07","section":"PART II · CARDIOVASCULAR DISEASE에 대한 개별화된 접근","title":"7 · Genetics","sub":"Genetics","file":"ch07.html","sections":[{"level":2,"title":"이 장의 구성","id":"이-장의-구성"},{"level":2,"title":"Central Dogma","id":"central-dogma"},{"level":2,"title":"유전율","id":"유전율"},{"level":2,"title":"유전적 구조","id":"유전적-구조"},{"level":2,"title":"유전적 변이","id":"유전적-변이"},{"level":2,"title":"인간 유전 변이의 특성 규명","id":"인간-유전-변이의-특성-규명"},{"level":2,"title":"가족 기반 연구","id":"가족-기반-연구"},{"level":4,"title":"Hypercholesterolemia와 Coronary Artery Disease (Chapter 27 참조)","id":"hypercholesterolemia와-coronary-artery-disease-chapter-27-참조"},{"level":4,"title":"Metabolic Syndrome과 Coronary Artery Disease","id":"metabolic-syndrome과-coronary-artery-disease"},{"level":2,"title":"환자-대조군 및 인구 기반 연구","id":"환자-대조군-및-인구-기반-연구"},{"level":4,"title":"지질에 대한 Genome-Wide Association Study","id":"지질에-대한-genome-wide-association-study"},{"level":4,"title":"Coronary Artery Disease에 대한 Genome-Wide Association Study","id":"coronary-artery-disease에-대한-genome-wide-association-study"},{"level":4,"title":"Coronary Artery Disease와 연관된 드문 단백질 암호화 변이의 인구 기반 발견","id":"coronary-artery-disease와-연관된-드문-단백질-암호화-변이의-인구-기반-발견"},{"level":2,"title":"역학적 연관성의 인과 추론","id":"역학적-연관성의-인과-추론"},{"level":2,"title":"Mendelian Randomization의 원리와 응용","id":"mendelian-randomization의-원리와-응용"},{"level":4,"title":"Lipoprotein의 인과 추론 (Chapter 27 참조)","id":"lipoprotein의-인과-추론-chapter-27-참조"},{"level":4,"title":"지방 분포의 인과 추론","id":"지방-분포의-인과-추론"},{"level":4,"title":"Mendelian Randomization의 가정 평가","id":"mendelian-randomization의-가정-평가"},{"level":2,"title":"질병 위험 예측","id":"질병-위험-예측"},{"level":2,"title":"병원성 평가와 Monogenic 위험","id":"병원성-평가와-monogenic-위험"},{"level":4,"title":"Monogenic Coronary Artery Disease","id":"monogenic-coronary-artery-disease"},{"level":2,"title":"Polygenic Risk Scoring","id":"polygenic-risk-scoring"},{"level":4,"title":"Polygenic Coronary Artery Disease","id":"polygenic-coronary-artery-disease"},{"level":2,"title":"치료 반응 예측","id":"치료-반응-예측"},{"level":2,"title":"표적 발굴과 임상시험 예측","id":"표적-발굴과-임상시험-예측"},{"level":2,"title":"표적 관련 치료 부작용 예측","id":"표적-관련-치료-부작용-예측"},{"level":2,"title":"Precision Medicine","id":"precision-medicine"},{"level":4,"title":"CYP2C19 (Chapter 38도 참조)","id":"cyp2c19-chapter-38도-참조"},{"level":4,"title":"Familial Hypercholesterolemia","id":"familial-hypercholesterolemia"},{"level":4,"title":"Polygenic Coronary Artery Disease","id":"polygenic-coronary-artery-disease-2"},{"level":2,"title":"차세대 기술과 치료법","id":"차세대-기술과-치료법"},{"level":2,"title":"Somatic Genomics (Chapter 24도 참조)","id":"somatic-genomics-chapter-24도-참조"},{"level":2,"title":"Epigenetics","id":"epigenetics"},{"level":2,"title":"Single-Cell Ribonucleic Acid Sequencing (Chapter 24도 참조)","id":"single-cell-ribonucleic-acid-sequencing-chapter-24도-참조"},{"level":2,"title":"Genome을 표적으로 하는 치료","id":"genome을-표적으로-하는-치료"},{"level":2,"title":"향후 전망","id":"향후-전망"},{"level":2,"title":"REFERENCES","id":"references"}]},{"id":"ch08","section":"PART II · CARDIOVASCULAR DISEASE에 대한 개별화된 접근","title":"8 · Proteomics & Metabolomics","sub":"Proteomics & Metabolomics","file":"ch08.html","sections":[{"level":2,"title":"이 장의 구성","id":"이-장의-구성"},{"level":2,"title":"BIOMARKER 발굴의 새로운 기술","id":"biomarker-발굴의-새로운-기술"},{"level":2,"title":"PROTEOMICS와 METABOLOMICS 입문","id":"proteomics와-metabolomics-입문"},{"level":2,"title":"PROTEOMICS와 METABOLOMICS의 분석적 과제","id":"proteomics와-metabolomics의-분석적-과제"},{"level":2,"title":"발굴 과정의 개관","id":"발굴-과정의-개관"},{"level":2,"title":"MASS SPECTROMETRY 기반 발굴의 CARDIOMETABOLIC DISEASE 응용","id":"mass-spectrometry-기반-발굴의-cardiometabolic-disease-응용"},{"level":2,"title":"BIOMARKER 발굴의 향후 방향","id":"biomarker-발굴의-향후-방향"},{"level":2,"title":"REFERENCES","id":"references"}]},{"id":"ch09","section":"PART II · CARDIOVASCULAR DISEASE에 대한 개별화된 접근","title":"9 · Drug Therapeutics","sub":"Drug Therapeutics","file":"ch09.html","sections":[{"level":2,"title":"이 장의 구성","id":"이-장의-구성"},{"level":2,"title":"약물 치료의 위험 대 이득","id":"약물-치료의-위험-대-이득"},{"level":2,"title":"Clinical Trial은 예상치 못한 약물 유해 반응을 밝혀낼 수 있다","id":"clinical-trial은-예상치-못한-약물-유해-반응을-밝혀낼-수-있다"},{"level":2,"title":"약물 유해 반응의 분류","id":"약물-유해-반응의-분류"},{"level":2,"title":"PHARMACOKINETICS와 PHARMACODYNAMICS","id":"pharmacokinetics와-pharmacodynamics"},{"level":2,"title":"다양한 약물 반응의 분자적·유전적 기반","id":"다양한-약물-반응의-분자적-유전적-기반"},{"level":2,"title":"고위험 Pharmacokinetics","id":"고위험-pharmacokinetics"},{"level":2,"title":"그 밖의 중요한 Pharmacogenetic 효과","id":"그-밖의-중요한-pharmacogenetic-효과"},{"level":2,"title":"약물 용량의 최적화","id":"약물-용량의-최적화"},{"level":2,"title":"혈장 농도 모니터링","id":"혈장-농도-모니터링"},{"level":2,"title":"질병 상태에서의 용량 조정","id":"질병-상태에서의-용량-조정"},{"level":2,"title":"약물 상호작용","id":"약물-상호작용"},{"level":2,"title":"Pharmacogenetic 정보를 처방에 반영하기","id":"pharmacogenetic-정보를-처방에-반영하기"},{"level":2,"title":"향후 전망","id":"향후-전망"},{"level":2,"title":"REFERENCES","id":"references"}]}];
+
+/* ============================================================
+   Braunwald Web Book — navigation runtime (hand-maintained).
+
+   book.js holds only the generated BOOK_PAGES data; this file holds the
+   behaviour, so regenerating the table of contents never overwrites it.
+
+   Provides:
+     · home page  — part → chapter list, subsections collapsed by default
+     · chapter    — slide-in sidebar for jumping to any other chapter
+     · chapter    — Previous / Next pager beneath the content
+   ============================================================ */
+(function () {
+  'use strict';
+
+  var pages = window.BOOK_PAGES || [];
+  if (!pages.length) return;
+
+  var fileName = decodeURIComponent((location.pathname.split('/').pop() || 'index.html'));
+  if (!fileName) fileName = 'index.html';
+  var current = null;
+  for (var i = 0; i < pages.length; i++) {
+    if (pages[i].file === fileName) { current = pages[i]; break; }
+  }
+  var curIndex = current ? pages.indexOf(current) : -1;
+
+  var BOOK_TITLE = "Braunwald's Heart Disease";
+  var SVG_CHEV = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>';
+  var SVG_BOOK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>';
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function (ch) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch];
+    });
+  }
+
+  /* Each chapter page supplies its own part label, and the wording drifted
+     between build sessions ("Part IV · adaptive immune response" vs
+     "Part IV · 적응 면역 반응"). Group by the part numeral instead of the raw
+     string so one part yields one heading. */
+  var PART_NAMES = {
+    I: 'Part I · Cardiovascular Medicine의 기초',
+    II: 'Part II · Cardiovascular Disease에 대한 개별화된 접근'
+  };
+  function partKey(p) {
+    var m = /Part\s+([IVX]+)/i.exec(p.section || '');
+    return m ? m[1].toUpperCase() : (p.section || '기타');
+  }
+  function partLabel(p) {
+    var key = partKey(p);
+    return PART_NAMES[key] || p.section || '기타';
+  }
+
+  /* A chapter page and its exercises page are one entry in the reader's mind,
+     so present them together even though they are two files. */
+  function isExercises(p) { return /-exercises$/i.test(p.id); }
+  function baseId(p) { return p.id.replace(/-exercises$/i, ''); }
+
+  function groupPages() {
+    var groups = [];
+    var byBase = {};
+    pages.forEach(function (p) {
+      if (isExercises(p)) return;
+      var g = { main: p, exercises: null };
+      byBase[p.id] = g;
+      groups.push(g);
+    });
+    pages.forEach(function (p) {
+      if (!isExercises(p)) return;
+      var g = byBase[baseId(p)];
+      if (g) g.exercises = p;
+      else groups.push({ main: p, exercises: null });
+    });
+    return groups;
+  }
+
+  /* The generated title looks like "6장 · T Lymphocyte에 대한 Antigen Presentation".
+     Split it so the chapter number can be styled as an eyebrow. */
+  function splitTitle(title) {
+    var parts = String(title).split(' · ');
+    if (parts.length < 2) return { num: '', rest: title };
+    return { num: parts[0], rest: parts.slice(1).join(' · ') };
+  }
+
+  /* ---------------- home page ---------------- */
+
+  function makeHomeTOC() {
+    var root = document.querySelector('#tocHome');
+    if (!root) return;
+    root.innerHTML = '';
+
+    var groups = groupPages();
+    var lastPart = null;
+    var holder = null;
+
+    groups.forEach(function (g) {
+      var p = g.main;
+      if (partKey(p) !== lastPart) {
+        holder = document.createElement('section');
+        holder.className = 'home-section';
+        var h = document.createElement('div');
+        h.className = 'home-section-title';
+        h.textContent = partLabel(p);
+        holder.appendChild(h);
+        root.appendChild(holder);
+        lastPart = partKey(p);
+      }
+
+      var card = document.createElement('div');
+      card.className = 'home-chapter-card';
+
+      var t = splitTitle(p.title);
+      var a = document.createElement('a');
+      a.className = 'home-chapter';
+      a.href = p.file;
+      a.innerHTML = '<span class="home-num">' + esc(t.num) + '</span>' +
+        '<span class="home-title">' + esc(t.rest) + '</span>';
+      card.appendChild(a);
+
+      var meta = document.createElement('div');
+      meta.className = 'home-meta';
+      var count = document.createElement('span');
+      count.className = 'home-count';
+      count.textContent = (p.sections ? p.sections.length : 0) + '개 소절';
+      meta.appendChild(count);
+      if (g.exercises) {
+        var ex = document.createElement('a');
+        ex.className = 'home-exlink';
+        ex.href = g.exercises.file;
+        ex.textContent = '연습문제';
+        meta.appendChild(ex);
+      }
+      card.appendChild(meta);
+
+      if (p.sections && p.sections.length) {
+        var det = document.createElement('details');
+        det.className = 'home-details';
+        var sum = document.createElement('summary');
+        sum.innerHTML = SVG_CHEV + '<span>소절 목차 펼치기</span>';
+        det.appendChild(sum);
+        var wrap = document.createElement('div');
+        wrap.className = 'home-subsections';
+        p.sections.forEach(function (s) {
+          var x = document.createElement('a');
+          x.className = 'home-subsection level-' + s.level;
+          x.href = p.file + '#' + encodeURIComponent(s.id);
+          x.textContent = s.title;
+          wrap.appendChild(x);
+        });
+        det.appendChild(wrap);
+        det.addEventListener('toggle', function () {
+          sum.querySelector('span').textContent =
+            det.open ? '소절 목차 접기' : '소절 목차 펼치기';
+        });
+        card.appendChild(det);
+      }
+
+      holder.appendChild(card);
+    });
+
+    wireHomeToolbar(root);
+  }
+
+  function wireHomeToolbar(root) {
+    var expandBtn = document.getElementById('homeExpandAll');
+    if (expandBtn) {
+      expandBtn.addEventListener('click', function () {
+        var opening = expandBtn.getAttribute('aria-pressed') !== 'true';
+        root.querySelectorAll('details.home-details').forEach(function (d) { d.open = opening; });
+        expandBtn.setAttribute('aria-pressed', opening ? 'true' : 'false');
+        expandBtn.querySelector('.lbl').textContent = opening ? '소절 모두 접기' : '소절 모두 펼치기';
+      });
+    }
+  }
+
+  /* Home has no reader chrome of its own, so it carries its own theme switch.
+     Chapter pages keep using the toggle their own template already provides. */
+  function wireHomeTheme() {
+    var btn = document.getElementById('homeThemeBtn');
+    if (!btn) return;
+    var KEY = 'janewaybook_theme';
+    var saved = null;
+    try { saved = localStorage.getItem(KEY); } catch (e) { /* private mode */ }
+    if (saved === 'dark' || saved === 'light') {
+      document.documentElement.setAttribute('data-theme', saved);
+    }
+    function currentIsDark() {
+      var t = document.documentElement.getAttribute('data-theme');
+      if (t) return t === 'dark';
+      return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    function sync() { btn.setAttribute('aria-label', currentIsDark() ? '밝은 테마로' : '어두운 테마로'); }
+    btn.addEventListener('click', function () {
+      var next = currentIsDark() ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      try { localStorage.setItem(KEY, next); } catch (e) { /* ignore */ }
+      sync();
+    });
+    sync();
+  }
+
+  /* ---------------- chapter sidebar ---------------- */
+
+  function makeSidebar() {
+    var topInner = document.querySelector('header.top .top-inner');
+
+    var btn = document.createElement('button');
+    btn.id = 'bookNavBtn';
+    btn.type = 'button';
+    btn.className = 'bk-btn bk-iconbtn';
+    btn.innerHTML = SVG_BOOK;
+    btn.setAttribute('aria-label', '다른 장으로 이동');
+    btn.setAttribute('title', '다른 장으로 이동');
+    if (topInner) {
+      var brand = topInner.querySelector('.brand');
+      if (brand) topInner.insertBefore(btn, brand); else topInner.prepend(btn);
+    } else {
+      btn.style.cssText = 'position:fixed;left:14px;bottom:14px;z-index:90';
+      document.body.appendChild(btn);
+    }
+
+    var scrim = document.createElement('div');
+    scrim.id = 'bookScrim';
+
+    var panel = document.createElement('aside');
+    panel.id = 'bookPanel';
+    panel.setAttribute('aria-label', '책 전체 목차');
+    panel.setAttribute('aria-hidden', 'true');
+
+    var head = document.createElement('div');
+    head.className = 'book-head';
+    var hwrap = document.createElement('div');
+    hwrap.innerHTML = '<h2>' + esc(BOOK_TITLE) + '</h2><p>전체 ' + groupPages().length + '개 장</p>';
+    var close = document.createElement('button');
+    close.className = 'book-close';
+    close.type = 'button';
+    close.innerHTML = '&times;';
+    close.setAttribute('aria-label', '목차 닫기');
+    head.append(hwrap, close);
+
+    var list = document.createElement('nav');
+    list.className = 'book-list';
+    var lastPart = null;
+
+    groupPages().forEach(function (g) {
+      var p = g.main;
+      if (partKey(p) !== lastPart) {
+        var sec = document.createElement('div');
+        sec.className = 'book-part';
+        sec.textContent = partLabel(p);
+        list.appendChild(sec);
+        lastPart = partKey(p);
+      }
+
+      var chapter = document.createElement('div');
+      chapter.className = 'book-chapter';
+      var row = document.createElement('div');
+      row.className = 'book-row';
+
+      var t = splitTitle(p.title);
+      var link = document.createElement('a');
+      link.className = 'book-link';
+      link.href = p.file;
+      link.innerHTML = '<span class="chapter-num">' + esc(t.num) + '</span>' +
+        '<span class="chapter-title">' + esc(t.rest) + '</span>';
+      var isCurrentChapter = !!current && baseId(current) === p.id;
+      if (current && p.id === current.id) {
+        link.classList.add('current');
+        link.setAttribute('aria-current', 'page');
+      }
+      row.appendChild(link);
+
+      var sublist = null;
+      if (p.sections && p.sections.length) {
+        var toggle = document.createElement('button');
+        toggle.type = 'button';
+        toggle.className = 'book-subtoggle';
+        toggle.innerHTML = SVG_CHEV;
+        toggle.setAttribute('aria-label', t.num + ' 소절 목차');
+        toggle.setAttribute('aria-expanded', isCurrentChapter ? 'true' : 'false');
+        row.appendChild(toggle);
+
+        sublist = document.createElement('div');
+        sublist.className = 'book-sublist';
+        if (isCurrentChapter) sublist.classList.add('expanded');
+        p.sections.forEach(function (s) {
+          var a = document.createElement('a');
+          a.className = 'book-sublink level-' + s.level;
+          a.href = p.file + '#' + encodeURIComponent(s.id);
+          a.textContent = s.title;
+          if (isCurrentChapter && decodeURIComponent(location.hash.slice(1)) === s.id) {
+            a.classList.add('active-section');
+          }
+          sublist.appendChild(a);
+        });
+
+        toggle.addEventListener('click', function () {
+          var open = sublist.classList.toggle('expanded');
+          toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+      }
+
+      chapter.appendChild(row);
+      if (sublist) chapter.appendChild(sublist);
+
+      if (g.exercises) {
+        var ex = document.createElement('a');
+        ex.className = 'book-exlink';
+        ex.href = g.exercises.file;
+        ex.textContent = '☆ 연습문제';
+        if (current && g.exercises.id === current.id) {
+          ex.classList.add('current');
+          ex.setAttribute('aria-current', 'page');
+        }
+        chapter.appendChild(ex);
+      }
+
+      list.appendChild(chapter);
+    });
+
+    var foot = document.createElement('div');
+    foot.style.cssText = 'padding:10px 12px 4px';
+    var home = document.createElement('a');
+    home.className = 'book-exlink book-homelink';
+    home.href = 'index.html';
+    home.textContent = '← 전체 목차 홈';
+    foot.appendChild(home);
+    list.appendChild(foot);
+
+    panel.append(head, list);
+    document.body.append(scrim, panel);
+
+    var lastFocus = null;
+    function open() {
+      lastFocus = document.activeElement;
+      panel.classList.add('show');
+      scrim.classList.add('show');
+      panel.setAttribute('aria-hidden', 'false');
+      close.focus();
+      var cur = panel.querySelector('.book-link.current, .book-exlink.current');
+      if (cur && cur.scrollIntoView) cur.scrollIntoView({ block: 'center' });
+    }
+    function shut() {
+      panel.classList.remove('show');
+      scrim.classList.remove('show');
+      panel.setAttribute('aria-hidden', 'true');
+      if (lastFocus && lastFocus.focus) lastFocus.focus();
+    }
+    btn.addEventListener('click', open);
+    close.addEventListener('click', shut);
+    scrim.addEventListener('click', shut);
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && panel.classList.contains('show')) shut();
+    });
+  }
+
+  /* ---------------- previous / next ---------------- */
+
+  function makePager() {
+    if (!current) return;
+    var main = document.querySelector('main');
+    if (!main) return;
+
+    var prev = curIndex > 0 ? pages[curIndex - 1] : null;
+    var next = curIndex >= 0 && curIndex < pages.length - 1 ? pages[curIndex + 1] : null;
+
+    var pager = document.createElement('nav');
+    pager.id = 'bookPager';
+    pager.setAttribute('aria-label', '이전 / 다음 페이지');
+
+    function make(p, cls, label, fallbackText) {
+      var a = document.createElement('a');
+      a.className = 'book-page-link ' + cls;
+      if (p) {
+        a.href = p.file;
+      } else {
+        a.href = 'index.html';
+        a.classList.add('home');
+      }
+      a.innerHTML = '<span class="label">' + label + '</span>' +
+        '<span class="title">' + esc(p ? p.title : fallbackText) + '</span>';
+      return a;
+    }
+
+    pager.append(
+      make(prev, 'prev', '← Previous', '전체 목차'),
+      make(next, 'next', 'Next →', '전체 목차')
+    );
+    main.insertAdjacentElement('afterend', pager);
+  }
+
+  function init() {
+    makeHomeTOC();
+    wireHomeTheme();
+    if (current) { makeSidebar(); makePager(); }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+
+</script>
+<!--BOOK-NAV-END-->
+</body>
+</html>
